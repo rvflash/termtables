@@ -80,8 +80,8 @@ fi
 # Use getopts vs getopt for MacOs portability
 while getopts "f::t::s:q" FLAG; do
     case "${FLAG}" in
-        f) if [ "${OPTARG:0:1}" = "/" ]; then CSV_FILE="$OPTARG"; else CSV_FILE="$SCRIPT_ROOT$OPTARG"; fi ;;
-        t) if [ "${OPTARG:0:1}" = "/" ]; then CSV_PRINT_FILE="$OPTARG"; else CSV_PRINT_FILE="$SCRIPT_ROOT$OPTARG"; fi ;;
+        f) if [ "${OPTARG:0:1}" = "/" ]; then CSV_FILE="$OPTARG"; else CSV_FILE="${SCRIPT_ROOT}${OPTARG}"; fi ;;
+        t) if [ "${OPTARG:0:1}" = "/" ]; then CSV_PRINT_FILE="$OPTARG"; else CSV_PRINT_FILE="${SCRIPT_ROOT}${OPTARG}"; fi ;;
         s) if [ "$OPTARG" != "" ]; then CSV_SEP_COLUMN="$OPTARG"; fi ;;
         q) SILENT=1 ;;
         *) usage; exit 1 ;;
@@ -91,7 +91,10 @@ done
 shift $(( OPTIND - 1 ));
 
 # Mandatory options
- if [ -z "$CSV_FILE" ] || [ ! -f "$CSV_FILE" ]; then
+if [ -z "$CSV_FILE" ]; then
+    echo "Please give a CSV file path in input"
+    exit 1
+elif [ ! -f "$CSV_FILE" ]; then
     echo "File $CSV_FILE does not exist"
     exit 1
 fi
