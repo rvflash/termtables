@@ -4,7 +4,7 @@
 # Print a CVS file in Shell with readable columns and lines like Mysql command line
 
 # Constants
-declare -r CURDATE=`date +%Y%m%d`
+declare -r CURDATE=$(date +%Y%m%d)
 declare -r TMP_DIR="/tmp/shcsv/${CURDATE}/"
 declare -r CSV_PRINT_SEP_COLUMN="|"
 declare -r CSV_PRINT_COLUMN_BOUNCE="+"
@@ -27,10 +27,10 @@ function getDirectoryPath ()
 {
     local SOURCE="$1"
     while [ -h "$SOURCE" ]; do
-      local DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-      SOURCE="$(readlink "$SOURCE")"
-      # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
-      [[ ${SOURCE} != /* ]] && SOURCE="$DIR/$SOURCE"
+        local DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+        SOURCE="$(readlink "$SOURCE")"
+        # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+        [[ ${SOURCE} != /* ]] && SOURCE="$DIR/$SOURCE"
     done
     DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
@@ -62,7 +62,7 @@ function printCsvBreakLine ()
 # Default values
 getDirectoryPath "${BASH_SOURCE[0]}"
 SCRIPT_ROOT="$DIRECTORY_PATH"
-SCRIPT=`basename ${BASH_SOURCE[0]}`
+SCRIPT=$(basename ${BASH_SOURCE[0]})
 
 CSV_SEP_COLUMN=","
 CSV_FILE=""
@@ -103,7 +103,7 @@ if [ -z "$CSV_PRINT_FILE" ]; then
     CLEAN_WRK=1
 fi
 
-# Add a empty column, ignore empty lines, manage empty columns and others
+# Add a empty column, manage empty columns and others and ignore empty lines
 sed -e "s/$/${CSV_SEP_COLUMN}/g" \
     -e "s/${CSV_SEP_COLUMN}${CSV_SEP_COLUMN}/${CSV_SEP_COLUMN} ${CSV_SEP_COLUMN}/g" \
     -e "s/^/${CSV_PRINT_SEP_COLUMN} /g"  \
