@@ -12,11 +12,11 @@
 #
 # @copyright 2016 Hervé Gouchet
 # @license http://www.apache.org/licenses/LICENSE-2.0
-# @source https://github.com/rvflash/shcsv
+# @source https://github.com/rvflash/termtables
 
 BEGIN {
     # Separators (input)
-    FS=","
+    FS=",";
 
     # Separators (output)
     if ("" == columnSeparator) {
