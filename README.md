@@ -1,6 +1,6 @@
-# Termtables, bash ASCII Table Generator, from CSV file
+# Termtables, bash ASCII Table Generator
 
-Awk script to print a CSV file in a shell terminal with readable columns and lines, like with Mysql command line.
+Awk scripts to display a CSV file in a shell terminal with readable columns and lines, like with Mysql command line.
 Also offers methods to aggregate the CSV file by line or column, count data inside and sum the column values.
 
 In default display mode, all columns are on one line. You can use the first line as header or/and the last as footer.
