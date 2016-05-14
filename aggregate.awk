@@ -2,8 +2,9 @@
 
 ##
 # Aggregate a CSV file and expose the COUNT, SUM and DISTINCT methods
-# @param int omitHeader If 1, exclude the first line
 # @param string header New header line
+# @param int omitHeader If 1, exclude the first line
+# @param int distinctLine If, aggregate by the entire line
 # @param string distinctColumns List of columns by index to use in single mode
 # @param string countColumns List of columns by index to count, separated by space
 # @param string sumColumns List of columns by index to sum, separated by space
@@ -14,17 +15,21 @@
 # @source https://github.com/rvflash/shcsv
 
 BEGIN {
+    # Separators (input)
+    FS=","
+
     # Skip header line
     start=1;
     if (1 == omitHeader) {
         start++;
     }
 
-    # Manage empty input file
+    # Manage empty input file and default value
     aggregating[""]="";
     count[""]=0;
     distinct[""]=0;
     sum[""]=0;
+    numberFields=0;
 
     # Convert string args to array
     split(distinctColumns, distincts, " ");
@@ -33,19 +38,26 @@ BEGIN {
     split(groupByColumns, groups, " ");
 }
 (NR >= start) {
+    # Split line with comma separated values and deal with comma inside quotes
+    numberFields=splitLine($0, columns);
+
     # Group by (single or multiple columns)
-    group="";
-    for (column in groups) {
-        if ("" == group) {
-            group=$groups[column];
-        } else {
-            group=group FS $groups[column];
+    if (1 == distinctLine) {
+        group=$0;
+    } else {
+        group="";
+        for (column in groups) {
+            if ("" == group) {
+                group=columns[groups[column]];
+            } else {
+                group=group FS columns[groups[column]];
+            }
         }
     }
 
-    # Distinct (if no group has been defined but first column requested as distinct value, use it as group)
+    # Distinct (if no group has been defined but first column requested as distinct value, use it for grouping)
     if ("" == group && inArray(1, distincts)) {
-        group=$1;
+        group=columns[1];
     }
     aggregating[group]=$0;
 
@@ -53,13 +65,13 @@ BEGIN {
     count[group]++;
     for (column in counts) {
         if (inArray(counts[column], distincts)) {
-            distinct[counts[column] FS group FS $counts[column]]++;
+            distinct[counts[column] FS group FS columns[counts[column]]]++;
         }
     }
 
     # Sum
     for (column in sums) {
-        sum[sums[column] FS group]+=$sums[column];
+        sum[sums[column] FS group]+=columns[sums[column]];
     }
 }
 END {
@@ -72,10 +84,9 @@ END {
     if (length(aggregating) > 1) {
         delete aggregating[""];
     }
-
     for (group in aggregating) {
-        columnSize=split(aggregating[group], aggregate, FS);
-        for (column=1; column <= columnSize; column++) {
+        numberFields=splitLine(aggregating[group], columns);
+        for (column=1; column <= numberFields; column++) {
             if (inArray(column, counts)) {
                 if (inArray(column, distincts)) {
                     printf("%d", countKeyWith(column FS group FS, distinct))
@@ -89,9 +100,10 @@ END {
                     printf("%.4f", sum[column FS group])
                 }
             } else {
-                printf("%s", aggregate[column])
+                # Protect column containing comma by quotes
+                printf("%s", (columns[column] ~ FS ? "\"" columns[column] "\"" : columns[column]))
             }
-            if (column < columnSize) {
+            if (column < numberFields) {
                 printf(FS)
             } else {
                 printf("\n")
@@ -127,4 +139,28 @@ function inArray (needle, haystack) {
         }
     }
     return 0
+}
+
+##
+# Split line and deal with escaping separator within double quotes
+# Cheating with CSV file that contains comma inside a quoted field
+# @param string line
+# @param array columns
+# @return int
+function splitLine (line, columns)
+{
+    numberFields=0;
+    line=line FS;
+
+    while(line) {
+        match(line, / *"[^"]*" *,|[^,]*,/);
+        field=substr(line, RSTART, RLENGTH);
+        # Remove extra data
+        gsub(/^ *"?|"? *,$/, "", field);
+        numberFields++;
+        columns[numberFields]=field;
+        # So, next ?
+        line=substr(line, RLENGTH+1);
+    }
+    return numberFields
 }

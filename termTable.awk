@@ -2,19 +2,22 @@
 
 ##
 # ASCII Table Generator from CSV file
-# @param int verticalMode, If 1, enable vertical display table
-# @param int withFooter If 1, use the last line as footer. Option disabled with verticalMode enabled
-# @param int withoutHeader If 1, do not use the first line as header. Option disabled with verticalMode enabled
-# @param string columnSeparator, Character to separate column, default "|"
-# @param string columnBounce, Character to bounce separate line, default "+"
-# @param string columnBreakLine, Character to use as break line, default "-" or "*" in vertical mode
-# @param string lineLabel, String to as suffix of the line number in vertical mode
+# @param int verticalMode, if 1, enable vertical display table
+# @param int withFooter if 1, use the last line as footer. Option disabled with verticalMode enabled
+# @param int withoutHeader if 1, do not use the first line as header. Option disabled with verticalMode enabled
+# @param string columnSeparator, character to separate column, default "|"
+# @param string columnBounce, character to bounce separate line, default "+"
+# @param string columnBreakLine, character to use as break line, default "-" or "*" in vertical mode
+# @param string lineLabel, string to use as suffix of the line number in vertical mode
 #
 # @copyright 2016 Hervé Gouchet
 # @license http://www.apache.org/licenses/LICENSE-2.0
 # @source https://github.com/rvflash/shcsv
 
 BEGIN {
+    # Separators (input)
+    FS=","
+
     # Separators (output)
     if ("" == columnSeparator) {
         columnSeparator="|";
@@ -106,7 +109,6 @@ function splitLine (line, columns)
     }
     return numberFields
 }
-
 
 ##
 # Repeat a string
