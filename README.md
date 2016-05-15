@@ -148,7 +148,10 @@ Available options for `aggregate.awk`, see list below:
 * `header`, define new header line
 * `omitHeader`, use to exclude the first line
 * `distinctLine`, aggregate by the entire line
+* `avgColumns`, list of columns per index on which to calculate the average, separated by space
 * `distinctColumns`, list of columns by index to use in single mode
 * `countColumns`, list of columns by index to count, separated by space
+* `maxColumns`, list of columns per index where find the max value, separated by space
+* `minColumns`, list of columns per index where find the min value, separated by space
 * `sumColumns`, list of columns by index to sum, separated by space
 * `groupByColumns`, list of columns by index to use to group, separated by space

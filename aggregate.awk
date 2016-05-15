@@ -5,7 +5,10 @@
 # @param string header New header line
 # @param int omitHeader If 1, exclude the first line
 # @param int distinctLine If, aggregate by the entire line
-# @param string distinctColumns List of columns by index to use in single mode
+# @param string avgColumns List of columns by index to use to calculate average, separated by space
+# @param string distinctColumns List of columns by index to use in single mode, separated by space
+# @param string minColumns List of columns by index where find the min value, separated by space
+# @param string maxColumns List of columns by index where find the max value, separated by space
 # @param string countColumns List of columns by index to count, separated by space
 # @param string sumColumns List of columns by index to sum, separated by space
 # @param string groupByColumns List of columns by index to use to group, separated by space
@@ -24,18 +27,14 @@ BEGIN {
         start++;
     }
 
-    # Manage empty input file and default value
-    aggregating[""]="";
-    count[""]=0;
-    distinct[""]=0;
-    sum[""]=0;
-    numberFields=0;
-
     # Convert string args to array
-    split(distinctColumns, distincts, " ");
-    split(countColumns, counts, " ");
-    split(sumColumns, sums, " ");
-    split(groupByColumns, groups, " ");
+    splitFlip(avgColumns, averages, " ");
+    splitFlip(distinctColumns, distincts, " ");
+    splitFlip(countColumns, counts, " ");
+    splitFlip(minColumns, minimums, " ");
+    splitFlip(maxColumns, maximums, " ");
+    splitFlip(sumColumns, sums, " ");
+    splitFlip(groupByColumns, groups, " ");
 }
 (NR >= start) {
     # Split line with comma separated values and deal with comma inside quotes
@@ -48,65 +47,77 @@ BEGIN {
         group="";
         for (column in groups) {
             if ("" == group) {
-                group=columns[groups[column]];
+                group=columns[column];
             } else {
-                group=group FS columns[groups[column]];
+                group=group FS columns[column];
             }
         }
     }
 
-    # Distinct (if no group has been defined but first column requested as distinct value, use it for grouping)
-    if ("" == group && inArray(1, distincts)) {
+    # If no group has been defined but first column requested as distinct value, use it for grouping
+    if ("" == group && 1 in distincts) {
         group=columns[1];
     }
     aggregating[group]=$0;
-
-    # Count
     count[group]++;
-    for (column in counts) {
-        if (inArray(counts[column], distincts)) {
-            distinct[counts[column] FS group FS columns[counts[column]]]++;
-        }
-    }
 
-    # Sum
-    for (column in sums) {
-        sum[sums[column] FS group]+=columns[sums[column]];
+    for (column=1; column <= numberFields; column++) {
+        # Count distinct
+        distinct[column FS group FS columns[column]]++;
+        # Sum
+        sum[column FS group]+=columns[column];
+        # Max
+        if ("" == max[column FS group]) {
+            max[column FS group]=columns[column]
+        }
+        if (columns[column] > max[column FS group]) {
+            max[column FS group]=columns[column];
+        }
+        # Min
+        if ("" == min[column FS group]) {
+            min[column FS group]=columns[column]
+        }
+        if (columns[column] < min[column FS group]) {
+            min[column FS group]=columns[column];
+        }
     }
 }
 END {
+    # Empty file
+    if (NR < start) {
+        exit;
+    }
+
     # Output the new header line
     if ("" != header) {
         print header;
     }
 
-    # Remove the default aggregate where a group explicitly defined
-    if (length(aggregating) > 1) {
-        delete aggregating[""];
-    }
     for (group in aggregating) {
         numberFields=splitLine(aggregating[group], columns);
         for (column=1; column <= numberFields; column++) {
-            if (inArray(column, counts)) {
-                if (inArray(column, distincts)) {
+            if (column in counts) {
+                if (column in distincts) {
                     printf("%d", countKeyWith(column FS group FS, distinct))
                 } else {
                     printf("%d", count[group])
                 }
-            } else if (inArray(column, sums)) {
-                if (sum[column FS group] == int(sum[column FS group])) {
-                    printf("%d", sum[column FS group])
-                } else {
-                    printf("%.4f", sum[column FS group])
-                }
+            } else if (column in sums) {
+                printNumber(sum[column FS group], decimal);
+            } else if (column in averages) {
+                printNumber((sum[column FS group] / count[group]), decimal);
+            } else if (column in minimums) {
+                printNumber(min[column FS group], decimal);
+            } else if (column in maximums) {
+                printNumber(max[column FS group], decimal);
             } else {
-                # Protect column containing comma by quotes
+                # Protect column containing comma with quotes
                 printf("%s", (columns[column] ~ FS ? "\"" columns[column] "\"" : columns[column]))
             }
             if (column < numberFields) {
                 printf(FS)
             } else {
-                printf("\n")
+                printf(RS)
             }
         }
     }
@@ -128,17 +139,36 @@ function countKeyWith (needle, haystack) {
 }
 
 ##
-# Checks if a value exists in an array
-# @param mixed needle
-# @param array haystack
-# @return boolean
-function inArray (needle, haystack) {
-    for (key in haystack) {
-        if (needle == haystack[key]) {
-            return 1
-        }
+# Prints number with float format with 4 decimals only if necessary
+# @param int|float number
+# @param int number, by default 6
+# @param string
+function printNumber (number, decimal)
+{
+    if ("" == decimal) {
+        decimal=6
     }
-    return 0
+    if (number == int(number)) {
+        printf("%d", number);
+    } else {
+        number=sprintf("%.*f", decimal, number);
+        printf("%s", (number ~ FS ? "\"" number "\"" : number));
+    }
+}
+
+##
+# Split string and exchanges all keys with their associated values in an array, return length of array
+# @param string source
+# @param array destination
+# @param string separator
+# @return int
+function splitFlip (string, array, separator)
+{
+    split(string, arr, separator);
+    for (key in arr) {
+        array[arr[key]]=key;
+    }
+    return length(array);
 }
 
 ##
