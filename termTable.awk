@@ -5,7 +5,7 @@
 # @param int verticalMode, if 1, enable vertical display table
 # @param int withFooter if 1, use the last line as footer. Option disabled with verticalMode enabled
 # @param int withoutHeader if 1, do not use the first line as header. Option disabled with verticalMode enabled
-# @param string addHeader, line to add as first line with column's names separated by comma
+# @param string addHeader, line to add as header with column's names separated by comma
 # @param string replaceHeader, list of no empty value separated by comma overloads the column's names
 # @param string columnSeparator, character to separate column, default "|"
 # @param string columnBounce, character to bounce separate line, default "+"
