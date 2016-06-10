@@ -188,11 +188,6 @@ To find the current awk version, use the following command :
 awk -Wversion 2>/dev/null || awk --version
 ```
 
-On MacOs, you can use brew to install it: ```bash brew install gawk```
+On MacOs, you can use brew to install it: ```brew install gawk```
 
-On Debian based GNU/Linux, use APT package manager: 
-
-```bash
-sudo apt-get update
-sudo apt-get install gawk
-```
+On Debian based GNU/Linux, use APT package manager: ```sudo apt-get update; sudo apt-get install gawk```
